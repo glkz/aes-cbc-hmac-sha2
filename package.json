@@ -1,11 +1,28 @@
 {
   "name": "aes-cbc-hmac-sha2",
-  "version": "0.0.0",
-  "description": "",
+  "version": "0.3.0",
+  "repository": "git://github.com/glkz/aes-cbc-hmac-sha2",
+  "description": "Authenticated Encryption with AES-CBC and HMAC-SHA2",
+  "keywords": [
+    "crypto",
+    "authenticated encryption",
+    "authentication tag",
+    "aes",
+    "aead",
+    "jwa",
+    "hmac",
+    "aes-128-cbc-hmac-sha-256",
+    "aes-192-cbc-hmac-sha-384",
+    "aes-256-cbc-hmac-sha-512",
+    "aes-256-cbc-hmac-sha-384"
+  ],
   "main": "index.js",
   "scripts": {
     "test": "mocha"
   },
-  "author": "",
-  "license": "ISC"
+  "engines": {
+    "node": ">= 0.10.0"
+  },
+  "author": "Mustafa Altun <gmail@mustafaaltun.com>",
+  "license": "MIT"
 }
