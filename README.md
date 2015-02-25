@@ -89,6 +89,14 @@ decipher.pipe(decryptedtext);
 ```
 
 
+## Running the tests
+```sh
+$ git clone https://github.com/glkz/aes-cbc-hmac-sha2.git
+$ cd aes-cbc-hmac-sha2
+$ npm install
+$ npm test
+```
+
 
 ## Further Reading
 
