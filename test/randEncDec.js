@@ -15,7 +15,6 @@ var MAX_PLAINTEXT_LENGTH = 2048;
 var MAX_AAD_LENGTH = 512;
 var ITERATIONS = 200;
 
-
 algos.forEach(function(_algo) {
   var alg = _algo[0];
   var keySize = _algo[1];
@@ -27,7 +26,7 @@ algos.forEach(function(_algo) {
         var iv = randBytes(16);
         var aad = randBytes(Math.ceil(Math.random()) * MAX_AAD_LENGTH);
         var plaintext = randBytes(Math.ceil(Math.random()) * MAX_PLAINTEXT_LENGTH);
-        
+
         var ciphertext;
         var authTag;
 
@@ -42,7 +41,6 @@ algos.forEach(function(_algo) {
         cipherChunks.push(cipher.final());
         ciphertext = Buffer.concat(cipherChunks);
         authTag = cipher.getAuthTag();
-
 
         var decipher = aesHmacSha2.createDecipheriv(alg, key, iv);
         decipher.setAAD(aad);

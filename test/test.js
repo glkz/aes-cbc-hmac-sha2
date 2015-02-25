@@ -20,13 +20,12 @@ var vectors = (function() {
   });
 })();
 
-
 var cipherWriteSync = function(cipher, data) {
-    var chunks = [];
-    chunks.push(cipher.update(data));
-    chunks.push(cipher.final());
+  var chunks = [];
+  chunks.push(cipher.update(data));
+  chunks.push(cipher.final());
 
-    return Buffer.concat(chunks);
+  return Buffer.concat(chunks);
 };
 
 var cipherWriteAsync = function(cipher, data, end) {
@@ -44,9 +43,8 @@ var cipherWriteAsync = function(cipher, data, end) {
   cipher.end();
 };
 
-
 describe('getCiphers', function() {
-  it('contains 4 elements', function(){
+  it('contains 4 elements', function() {
     assert.equal(4, aesHmacSha2.getCiphers().length);
   });
 });
@@ -70,7 +68,6 @@ describe('Cipher Sync', function() {
   });
 });
 
-
 describe('Decipher Sync', function() {
   vectors.forEach(function(vec) {
     describe(vec.ALG, function() {
@@ -79,7 +76,6 @@ describe('Decipher Sync', function() {
       decipher.setAAD(vec.A);
       decipher.setAuthTag(vec.T);
       var plaintext = cipherWriteSync(decipher, vec.E);
-
 
       it('#check tag', function() {
         assert.equal(decipher.getAuthTag().toString('hex'), vec.T.toString('hex'));
@@ -97,12 +93,10 @@ describe('Cipher Stream', function() {
   vectors.forEach(function(vec) {
     describe(vec.ALG, function() {
 
-
       it('#check tag&ciphertext', function(done) {
         var cipher = aesHmacSha2.createCipheriv(vec.ALG, vec.K, vec.IV);
         cipher.setAAD(vec.A);
         cipherWriteAsync(cipher, vec.P, function(ciphertext) {
-
           assert.equal(ciphertext.toString('hex'), vec.E.toString('hex'));
           assert.equal(cipher.getAuthTag().toString('hex'), vec.T.toString('hex'));
 
@@ -118,65 +112,58 @@ describe('Decipher Stream', function() {
   vectors.forEach(function(vec) {
     describe(vec.ALG, function() {
 
-
       it('#check tag&ciphertext', function(done) {
         var decipher = aesHmacSha2.createDecipheriv(vec.ALG, vec.K, vec.IV);
         decipher.setAAD(vec.A);
         decipher.setAuthTag(vec.T);
 
         cipherWriteAsync(decipher, vec.E, function(plaintext) {
-          
           assert.equal(plaintext.toString('hex'), vec.P.toString('hex'));
           assert.equal(decipher.getAuthTag().toString('hex'), vec.T.toString('hex'));
-
           done();
         });
+
       });
 
     });
   });
 });
 
-
 describe('Cipher State Exceptions', function() {
   var vec    = vectors[0];
   var algo   = vec.ALG;
   var key    = vec.K;
   var iv     = vec.IV;
-  
+
   it('#setAAD must be before encryption', function(done) {
     var cipher = aesHmacSha2.createCipheriv(algo, key, iv);
     cipher.update(new Buffer([1, 2, 3, 4, 5, 6, 7, 8, 9, 0]));
-        
+
     assert.throws(function() {
       cipher.setAAD(new Buffer([9, 8, 7, 6, 5, 4, 3, 2, 1]));
     }, function() {
       done();
       return true;
     });
-
   });
 
   it('#getAuthTag must be after encryption', function(done) {
     var cipher = aesHmacSha2.createCipheriv(algo, key, iv);
     cipher.update(new Buffer([1, 2, 3, 4, 5, 6, 7, 8, 9, 0]));
-    
+
     assert.throws(cipher.getAuthTag, function() {
       done();
       return true;
     });
-
   });
-
 });
-
 
 describe('Decipher State Exceptions', function() {
   var vec    = vectors[0];
   var algo   = vec.ALG;
   var key    = vec.K;
   var iv     = vec.IV;
-  
+
   it('#must call setAuthTag before write', function(done) {
     var decipher = aesHmacSha2.createDecipheriv(algo, key, iv);
 
@@ -186,7 +173,6 @@ describe('Decipher State Exceptions', function() {
       done();
       return true;
     });
-
   });
 
   it('#getAuthTag must be after encryption', function(done) {
@@ -200,7 +186,5 @@ describe('Decipher State Exceptions', function() {
       done();
       return /failed/.test(err);
     });
-
   });
-
 });
