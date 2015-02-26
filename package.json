@@ -1,6 +1,6 @@
 {
   "name": "aes-cbc-hmac-sha2",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "repository": "git://github.com/glkz/aes-cbc-hmac-sha2",
   "description": "Authenticated Encryption with AES-CBC and HMAC-SHA2",
   "keywords": [
