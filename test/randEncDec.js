@@ -2,7 +2,7 @@
 
 var assert = require('assert');
 var randBytes = require('crypto').pseudoRandomBytes;
-var aesHmacSha2 = require('../index');
+var crypto = require('../index');
 
 var algos = [
   ['aes-128-cbc-hmac-sha-256', 32],
@@ -13,7 +13,7 @@ var algos = [
 
 var MAX_PLAINTEXT_LENGTH = 2048;
 var MAX_AAD_LENGTH = 512;
-var ITERATIONS = 200;
+var ITERATIONS = 50;
 
 algos.forEach(function(_algo) {
   var alg = _algo[0];
@@ -34,7 +34,7 @@ algos.forEach(function(_algo) {
         var plainChunks = [];
         var plaintext2;
 
-        var cipher = aesHmacSha2.createCipheriv(alg, key, iv);
+        var cipher = crypto.createCipheriv(alg, key, iv);
 
         cipher.setAAD(aad);
         cipherChunks.push(cipher.update(plaintext));
@@ -42,7 +42,7 @@ algos.forEach(function(_algo) {
         ciphertext = Buffer.concat(cipherChunks);
         authTag = cipher.getAuthTag();
 
-        var decipher = aesHmacSha2.createDecipheriv(alg, key, iv);
+        var decipher = crypto.createDecipheriv(alg, key, iv);
         decipher.setAAD(aad);
         decipher.setAuthTag(authTag);
         plainChunks.push(decipher.update(ciphertext));

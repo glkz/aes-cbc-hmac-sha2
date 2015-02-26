@@ -34,7 +34,18 @@ var cipher = aesHmac.createCipheriv(algo, key, iv);
 var decipher = aesHmac.createDecipheriv(algo, key, iv);
 ```
 
-Cipher and Decipher objects are streams that both readable and writable. 
+Cipher and Decipher objects are streams that both readable and writable.
+
+**You can also monkey-```patch``` node crypto module.**
+
+```js
+var crypto = require('crypto');
+require('aes-cbc-hmac-sha2').patch(crypto);
+
+var cipher = crypto.createCipheriv('aes-128-cbc-hmac-sha-256');
+//...
+
+```
 
 ### Encryption
 

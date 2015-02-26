@@ -1,7 +1,6 @@
 'use strict';
 
 var assert = require('assert');
-var aesHmacSha2 = require('../index');
 
 var tobuf = function(hexStr) {
   return new Buffer(hexStr, 'hex');
@@ -43,148 +42,166 @@ var cipherWriteAsync = function(cipher, data, end) {
   cipher.end();
 };
 
-describe('getCiphers', function() {
-  it('contains 4 elements', function() {
-    assert.equal(4, aesHmacSha2.getCiphers().length);
-  });
-});
-
-describe('Cipher Sync', function() {
-  vectors.forEach(function(vec) {
-    describe(vec.ALG, function() {
-      var cipher = aesHmacSha2.createCipheriv(vec.ALG, vec.K, vec.IV);
-      cipher.setAAD(vec.A);
-      var ciphertext = cipherWriteSync(cipher, vec.P);
-
-      it('#check tag', function() {
-        assert.equal(cipher.getAuthTag().toString('hex'), vec.T.toString('hex'));
+var initTests = function(crypto) {
+  describe('getCiphers', function() {
+    [
+      'aes-128-cbc-hmac-sha-256',
+      'aes-192-cbc-hmac-sha-384',
+      'aes-256-cbc-hmac-sha-512',
+      'aes-256-cbc-hmac-sha-384'
+    ].forEach(function(algo) {
+      it('should support ' + algo, function() {
+        assert.notEqual(crypto.getCiphers().indexOf(algo), -1);
       });
-
-      it('#check ciphertext', function() {
-        assert.equal(ciphertext.toString('hex'), vec.E.toString('hex'));
-      });
-
     });
+
   });
-});
 
-describe('Decipher Sync', function() {
-  vectors.forEach(function(vec) {
-    describe(vec.ALG, function() {
-
-      var decipher = aesHmacSha2.createDecipheriv(vec.ALG, vec.K, vec.IV);
-      decipher.setAAD(vec.A);
-      decipher.setAuthTag(vec.T);
-      var plaintext = cipherWriteSync(decipher, vec.E);
-
-      it('#check tag', function() {
-        assert.equal(decipher.getAuthTag().toString('hex'), vec.T.toString('hex'));
-      });
-
-      it('#check ciphertext', function() {
-        assert.equal(plaintext.toString('hex'), vec.P.toString('hex'));
-      });
-
-    });
-  });
-});
-
-describe('Cipher Stream', function() {
-  vectors.forEach(function(vec) {
-    describe(vec.ALG, function() {
-
-      it('#check tag&ciphertext', function(done) {
-        var cipher = aesHmacSha2.createCipheriv(vec.ALG, vec.K, vec.IV);
+  describe('Cipher Sync', function() {
+    vectors.forEach(function(vec) {
+      describe(vec.ALG, function() {
+        var cipher = crypto.createCipheriv(vec.ALG, vec.K, vec.IV);
         cipher.setAAD(vec.A);
-        cipherWriteAsync(cipher, vec.P, function(ciphertext) {
-          assert.equal(ciphertext.toString('hex'), vec.E.toString('hex'));
+        var ciphertext = cipherWriteSync(cipher, vec.P);
+
+        it('#check tag', function() {
           assert.equal(cipher.getAuthTag().toString('hex'), vec.T.toString('hex'));
-
-          done();
         });
-      });
 
+        it('#check ciphertext', function() {
+          assert.equal(ciphertext.toString('hex'), vec.E.toString('hex'));
+        });
+
+      });
     });
   });
-});
 
-describe('Decipher Stream', function() {
-  vectors.forEach(function(vec) {
-    describe(vec.ALG, function() {
+  describe('Decipher Sync', function() {
+    vectors.forEach(function(vec) {
+      describe(vec.ALG, function() {
 
-      it('#check tag&ciphertext', function(done) {
-        var decipher = aesHmacSha2.createDecipheriv(vec.ALG, vec.K, vec.IV);
+        var decipher = crypto.createDecipheriv(vec.ALG, vec.K, vec.IV);
         decipher.setAAD(vec.A);
         decipher.setAuthTag(vec.T);
+        var plaintext = cipherWriteSync(decipher, vec.E);
 
-        cipherWriteAsync(decipher, vec.E, function(plaintext) {
-          assert.equal(plaintext.toString('hex'), vec.P.toString('hex'));
+        it('#check tag', function() {
           assert.equal(decipher.getAuthTag().toString('hex'), vec.T.toString('hex'));
-          done();
+        });
+
+        it('#check ciphertext', function() {
+          assert.equal(plaintext.toString('hex'), vec.P.toString('hex'));
         });
 
       });
-
     });
   });
+
+  describe('Cipher Stream', function() {
+    vectors.forEach(function(vec) {
+      describe(vec.ALG, function() {
+
+        it('#check tag&ciphertext', function(done) {
+          var cipher = crypto.createCipheriv(vec.ALG, vec.K, vec.IV);
+          cipher.setAAD(vec.A);
+          cipherWriteAsync(cipher, vec.P, function(ciphertext) {
+            assert.equal(ciphertext.toString('hex'), vec.E.toString('hex'));
+            assert.equal(cipher.getAuthTag().toString('hex'), vec.T.toString('hex'));
+
+            done();
+          });
+        });
+
+      });
+    });
+  });
+
+  describe('Decipher Stream', function() {
+    vectors.forEach(function(vec) {
+      describe(vec.ALG, function() {
+
+        it('#check tag&ciphertext', function(done) {
+          var decipher = crypto.createDecipheriv(vec.ALG, vec.K, vec.IV);
+          decipher.setAAD(vec.A);
+          decipher.setAuthTag(vec.T);
+
+          cipherWriteAsync(decipher, vec.E, function(plaintext) {
+            assert.equal(plaintext.toString('hex'), vec.P.toString('hex'));
+            assert.equal(decipher.getAuthTag().toString('hex'), vec.T.toString('hex'));
+            done();
+          });
+
+        });
+
+      });
+    });
+  });
+
+  describe('Cipher State Exceptions', function() {
+    var vec    = vectors[0];
+    var algo   = vec.ALG;
+    var key    = vec.K;
+    var iv     = vec.IV;
+
+    it('#setAAD must be before encryption', function(done) {
+      var cipher = crypto.createCipheriv(algo, key, iv);
+      cipher.update(new Buffer([1, 2, 3, 4, 5, 6, 7, 8, 9, 0]));
+
+      assert.throws(function() {
+        cipher.setAAD(new Buffer([9, 8, 7, 6, 5, 4, 3, 2, 1]));
+      }, function() {
+        done();
+        return true;
+      });
+    });
+
+    it('#getAuthTag must be after encryption', function(done) {
+      var cipher = crypto.createCipheriv(algo, key, iv);
+      cipher.update(new Buffer([1, 2, 3, 4, 5, 6, 7, 8, 9, 0]));
+
+      assert.throws(cipher.getAuthTag, function() {
+        done();
+        return true;
+      });
+    });
+  });
+
+  describe('Decipher State Exceptions', function() {
+    var vec    = vectors[0];
+    var algo   = vec.ALG;
+    var key    = vec.K;
+    var iv     = vec.IV;
+
+    it('#must call setAuthTag before write', function(done) {
+      var decipher = crypto.createDecipheriv(algo, key, iv);
+
+      assert.throws(function() {
+        decipher.update(new Buffer([1, 2, 3, 4, 5, 6, 7, 8, 9, 0]));
+      }, function() {
+        done();
+        return true;
+      });
+    });
+
+    it('#getAuthTag must be after encryption', function(done) {
+      var decipher = crypto.createDecipheriv(algo, key, iv);
+      decipher.setAuthTag(vec.T);
+      decipher.update(vec.E);
+
+      assert.throws(function() {
+        decipher.final();
+      }, function(err) {
+        done();
+        return /failed/.test(err);
+      });
+    });
+  });
+};
+
+describe('direct', function() {
+  initTests(require('../index'));
 });
 
-describe('Cipher State Exceptions', function() {
-  var vec    = vectors[0];
-  var algo   = vec.ALG;
-  var key    = vec.K;
-  var iv     = vec.IV;
-
-  it('#setAAD must be before encryption', function(done) {
-    var cipher = aesHmacSha2.createCipheriv(algo, key, iv);
-    cipher.update(new Buffer([1, 2, 3, 4, 5, 6, 7, 8, 9, 0]));
-
-    assert.throws(function() {
-      cipher.setAAD(new Buffer([9, 8, 7, 6, 5, 4, 3, 2, 1]));
-    }, function() {
-      done();
-      return true;
-    });
-  });
-
-  it('#getAuthTag must be after encryption', function(done) {
-    var cipher = aesHmacSha2.createCipheriv(algo, key, iv);
-    cipher.update(new Buffer([1, 2, 3, 4, 5, 6, 7, 8, 9, 0]));
-
-    assert.throws(cipher.getAuthTag, function() {
-      done();
-      return true;
-    });
-  });
-});
-
-describe('Decipher State Exceptions', function() {
-  var vec    = vectors[0];
-  var algo   = vec.ALG;
-  var key    = vec.K;
-  var iv     = vec.IV;
-
-  it('#must call setAuthTag before write', function(done) {
-    var decipher = aesHmacSha2.createDecipheriv(algo, key, iv);
-
-    assert.throws(function() {
-      decipher.update(new Buffer([1, 2, 3, 4, 5, 6, 7, 8, 9, 0]));
-    }, function() {
-      done();
-      return true;
-    });
-  });
-
-  it('#getAuthTag must be after encryption', function(done) {
-    var decipher = aesHmacSha2.createDecipheriv(algo, key, iv);
-    decipher.setAuthTag(vec.T);
-    decipher.update(vec.E);
-
-    assert.throws(function() {
-      decipher.final();
-    }, function(err) {
-      done();
-      return /failed/.test(err);
-    });
-  });
+describe('patched', function() {
+  initTests(require('../index').patch(require('crypto')));
 });
