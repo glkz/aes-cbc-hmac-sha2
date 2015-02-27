@@ -1,5 +1,7 @@
 # Authenticated Encryption with AES-CBC and HMAC-SHA2
 
+[![Build Status](https://travis-ci.org/glkz/aes-cbc-hmac-sha2.svg?branch=master)](https://travis-ci.org/glkz/aes-cbc-hmac-sha2)
+
 For explanation see [the draft](http://tools.ietf.org/html/draft-mcgrew-aead-aes-cbc-hmac-sha2-04).
 
 Supported Algorithms:
